@@ -149,10 +149,22 @@ namespace FrmServer
             }
         }
 
+        //Hàm kiểm tra nhập tên
+        private bool IsLoggedIn(Socket client)
+        {
+            return clientNames.ContainsKey(client) && !string.IsNullOrWhiteSpace(clientNames[client]);
+        }
+
         //=== XỬ LÝ LOGIC NGHIỆP VỤ ===
         //Xử lý logic Tạo phòng
         private void ProcessRoomCreation(Socket client, string roomId)
         {
+            if (!IsLoggedIn(client))
+            {
+                SendResponse(client, "ERROR|Bạn chưa đăng nhập tên!");
+                return;
+            }
+
             if (!gameRooms.ContainsKey(roomId))
             {
                 gameRooms[roomId] = new List<Socket> { client }; //Sinh mã phòng
@@ -160,9 +172,9 @@ namespace FrmServer
                 clientRoomMapping[client] = roomId;
 				guessCounter[roomId] = 0;
 				SendResponse(client, $"ROOM_OK|{roomId}");
-				// Gửi thông báo số lượng người chơi hiện tại (1/2)
-				string name = clientNames.ContainsKey(client) ? clientNames[client] : "Ẩn danh";
-				BroadcastToRoom(roomId, $"INFO|{name} đã tạo phòng. Hiện có 1/2 người chơi.");
+                // Gửi thông báo số lượng người chơi hiện tại (1/2)
+                string name = clientNames[client]; 
+                BroadcastToRoom(roomId, $"INFO|{name} đã tạo phòng. Hiện có 1/2 người chơi.");
                 //////////18.1.2026//////////
                 UpdateServerLogs($"Phòng {roomId} được tạo. Số bí mật: {roomSecrets[roomId]}");
             }
@@ -175,6 +187,12 @@ namespace FrmServer
         //Xử lý logic Tham gia vào phòng chơi
         private void ProcessJoinRoom(Socket client, string roomId)
         {
+            if (!IsLoggedIn(client))
+            {
+                SendResponse(client, "ERROR|Bạn chưa đăng nhập tên!");
+                return;
+            }
+
             if (gameRooms.ContainsKey(roomId))
             {
 				if (gameRooms[roomId].Count >= 2)
@@ -186,8 +204,8 @@ namespace FrmServer
                 clientRoomMapping[client] = roomId;
                 SendResponse(client, $"ROOM_OK|{roomId}");
 
-                string name = clientNames.ContainsKey(client) ? clientNames[client] : "Ẩn danh";
-				
+                string name = clientNames[client];
+
                 int current = gameRooms[roomId].Count;
 				// Thông báo cho cả phòng biết số lượng người (2/2)
 				BroadcastToRoom(roomId, $"INFO|{name} đã tham gia. Hiện có {current}/2 người chơi. Ấn Sẵn sàng để bắt đầu!");
@@ -202,101 +220,86 @@ namespace FrmServer
 		//Xử lý logic sẵn sàng 
 		private void ProcessReady(Socket client)
 		{
-			if (readyClients.Contains(client)) return;
-			string roomId = clientRoomMapping[client];
-			readyClients.Add(client);
+            if (!IsLoggedIn(client))
+            {
+                SendResponse(client, "ERROR|Bạn chưa nhập tên!");
+                return;
+            }
 
-			//Thông báo sẵn sàng
-			string name = clientNames.ContainsKey(client) ? clientNames[client] : "Ẩn danh";
-			BroadcastToRoom(roomId, $"INFO|{name} đã sẵn sàng.");
+            if (!clientRoomMapping.ContainsKey(client)) return;
+            string roomId = clientRoomMapping[client];
+            readyClients.Add(client);
 
-			// Kiểm tra nếu đủ 2 người và cả 2 đều sẵn sàng
-			if (gameRooms[roomId].Count == 2 && gameRooms[roomId].All(c => readyClients.Contains(c)))
-			{
-				// Chọn người đi trước (người đầu tiên trong danh sách phòng)
-				Socket firstPlayer = gameRooms[roomId][0];
-				currentTurn[roomId] = firstPlayer;
+            //Thông báo sẵn sàng
+            string name = clientNames[client];
+            BroadcastToRoom(roomId, $"INFO|{name} đã sẵn sàng.");
 
-				// Gửi thông báo bắt đầu ván đấu
-				foreach (var s in gameRooms[roomId])
-				{
-					if (s == firstPlayer)
-						SendResponse(s, "INFO|Tất cả đã sẵn sàng! Bắt đầu chơi. Lượt của BẠN đoán.");
-					else
-						SendResponse(s, $"INFO|Tất cả đã sẵn sàng! Bắt đầu chơi. Lượt của {clientNames[firstPlayer]} đoán.");
-				}
-				UpdateServerLogs($"Phòng {roomId}: Trận đấu bắt đầu. Lượt đầu: {clientNames[firstPlayer]}");
-			}
-		}
+            int count = gameRooms[roomId].Count;
+            // Chế độ 1 người: Sẵn sàng là chơi luôn
+            if (count == 1)
+            {
+                SendResponse(client, "INFO|Chế độ chơi đơn: Bắt đầu đoán số!");
+                // Mở khóa nút gửi cho client
+                SendResponse(client, "INFO|Đến lượt của bạn");
+            }
+            // Chế độ 2 người
+            else if (count == 2 && gameRooms[roomId].All(c => readyClients.Contains(c)))
+            {
+                // Chọn người đi trước (người đầu tiên trong danh sách phòng)
+                Socket firstPlayer = gameRooms[roomId][0];
+                currentTurn[roomId] = firstPlayer;
+
+                // Gửi thông báo bắt đầu ván đấu
+                foreach (var s in gameRooms[roomId])
+                {
+                    if (s == firstPlayer)
+                        SendResponse(s, "INFO|Tất cả đã sẵn sàng! Bắt đầu chơi. Đến lượt của bạn đoán.");
+                    else
+                        SendResponse(s, $"INFO|Tất cả đã sẵn sàng! Bắt đầu chơi. Lượt của {clientNames[firstPlayer]} đoán.");
+                }
+                UpdateServerLogs($"Phòng {roomId}: Trận đấu bắt đầu. Lượt đầu: {clientNames[firstPlayer]}");
+            }
+        }
 
 		//Xử lý logic dự đoán số
-		// Xử lý logic dự đoán số
-private void ProcessGuessLogic(Socket client, string payload)
+        private void ProcessGuessLogic(Socket client, string payload)
 		{
 			if (!clientRoomMapping.ContainsKey(client)) return;
-			string roomId = clientRoomMapping[client];
+            if (!readyClients.Contains(client)) { SendResponse(client, "ERROR|Bạn chưa Sẵn sàng!"); return; }
 
-			// KIỂM TRA PHÒNG ĐỦ NGƯỜI
-			if (gameRooms[roomId].Count < 2)
-			{
-				SendResponse(client, "ERROR|Phòng chưa đủ 2 người chơi!");
-				return;
-			}
+            string roomId = clientRoomMapping[client];
 
-			// KIỂM TRA READY
-			if (!readyClients.Contains(client))
-			{
-				SendResponse(client, "ERROR|Bạn chưa bấm Sẵn sàng!");
-				return;
-			}
+            // Nếu 2 người, phải kiểm tra lượt
+            if (gameRooms[roomId].Count == 2)
+            {
+                if (!currentTurn.ContainsKey(roomId) || currentTurn[roomId] != client)
+                {
+                    SendResponse(client, "ERROR|Chưa tới lượt của bạn!");
+                    return;
+                }
+            }
 
-			// KIỂM TRA LƯỢT
-			if (!currentTurn.ContainsKey(roomId) || currentTurn[roomId] != client)
-			{
-				SendResponse(client, "ERROR|Chưa tới lượt của bạn!");
-				return;
-			}
+            if (!int.TryParse(payload, out int guess)) return;
+            int secret = roomSecrets[roomId];
+            string playerName = clientNames[client];
 
-			// KIỂM TRA SỐ ĐOÁN
-			if (!int.TryParse(payload, out int guess))
-			{
-				SendResponse(client, "ERROR|Giá trị đoán không hợp lệ!");
-				return;
-			}
-
-			int secret = roomSecrets[roomId];
-			string playerName = clientNames.ContainsKey(client) ? clientNames[client] : "Ẩn danh";
-
-			string compare = guess < secret ? "nhỏ hơn số bí mật"
-						   : guess > secret ? "lớn hơn số bí mật"
-						   : "CHÍNH XÁC!";
-
-			// Gửi cho tất cả người chơi kết quả đoán
-			foreach (var p in gameRooms[roomId])
-			{
-				if (guess == secret)
-					SendResponse(p, $"GUESS_RESULT|{playerName} đoán {guess} → {compare}");
-				else if (p == client)
-					SendResponse(p, $"GUESS_RESULT|Bạn đoán {guess} → {compare}");
-				else
-					SendResponse(p, $"GUESS_RESULT|{playerName} đoán {guess} → {compare}");
-			}
-
-			// THẮNG CUỘC
-			if (guess == secret)
-			{
-				BroadcastToRoom(roomId, $"WINNER|{playerName} đã chiến thắng! Số bí mật là {secret}.");
-				UpdateServerLogs($"Phòng {roomId}: {playerName} thắng.");
-
-				// RESET
-				foreach (var s in gameRooms[roomId]) readyClients.Remove(s);
-				currentTurn.Remove(roomId);
-				return;
-			}
-
-			// CHUYỂN LƯỢT
-			SwitchTurn(roomId, client);
-		}
+            if (guess < secret)
+            {
+                BroadcastToRoom(roomId, $"INFO|{playerName} đoán {guess} -> Nhỏ hơn số bí mật");
+                if (gameRooms[roomId].Count == 2) SwitchTurn(roomId, client);
+            }
+            else if (guess > secret)
+            {
+                BroadcastToRoom(roomId, $"INFO|{playerName} đoán {guess} -> Lớn hơn số bí mật");
+                if (gameRooms[roomId].Count == 2) SwitchTurn(roomId, client);
+            }
+            else
+            {
+                BroadcastToRoom(roomId, $"WINNER|{playerName} thắng! Số bí mật là {secret}");
+                foreach (var s in gameRooms[roomId]) readyClients.Remove(s);
+                currentTurn.Remove(roomId);
+            }
+        }
 
 		// Hàm phụ để đổi lượt 
 		private void SwitchTurn(string roomId, Socket currentClient)
@@ -307,27 +310,25 @@ private void ProcessGuessLogic(Socket client, string payload)
 
 			currentTurn[roomId] = nextPlayer;
 
-			SendResponse(currentClient, "INFO|Bạn đã đoán sai, chờ lượt tiếp theo.");
-			SendResponse(nextPlayer, "INFO|Tới lượt bạn đoán!");
-		}
+            SendResponse(currentClient, "INFO|Bạn đã đoán sai, chờ lượt tiếp theo.");
+            SendResponse(nextPlayer, "INFO|Đến lượt của bạn đoán!");
+        }
 
 		//Xử lý logic Chơi lại
 		private void ProcessRestartGame(Socket client)
         {
-            if (!clientRoomMapping.ContainsKey(client)) return; string roomId = clientRoomMapping[client]; 
-            // Nếu đây là người đầu tiên nhấn "Chơi lại" sau khi ván cũ kết thúc 
-            // Kiểm tra xem trong phòng này đã có ai sẵn sàng chưa
-            bool isFirstReady = true; 
-            foreach (var s in gameRooms[roomId]) 
-            { 
-                if (readyClients.Contains(s)) { isFirstReady = false; break; }
-            } 
-            if (isFirstReady) 
-            { 
-                roomSecrets[roomId] = randomGenerator.Next(1, 101); 
-                UpdateServerLogs($"Phòng {roomId} bắt đầu ván mới. Số bí mật: {roomSecrets[roomId]}"); 
-                BroadcastToRoom(roomId, "INFO|Trận đấu mới đã bắt đầu! Hãy đoán số mới."); 
-            }      
+            if (!clientRoomMapping.ContainsKey(client)) return;
+            string roomId = clientRoomMapping[client];
+
+            // Reset trạng thái
+            foreach (var s in gameRooms[roomId])
+                readyClients.Remove(s);
+
+            currentTurn.Remove(roomId);
+            roomSecrets[roomId] = randomGenerator.Next(1, 101);
+            BroadcastToRoom(roomId, "INFO|Trận đấu mới đã bắt đầu! Hãy đoán số mới.");
+            BroadcastToRoom(roomId, "RESTART_READY");
+            UpdateServerLogs($"Phòng {roomId} bắt đầu ván mới. Số bí mật: {roomSecrets[roomId]}");
         }
 
         //Xử lý logic Thoát phòng
@@ -343,7 +344,14 @@ private void ProcessGuessLogic(Socket client, string payload)
                 if (gameRooms[roomId].Count == 0) { gameRooms.Remove(roomId); roomSecrets.Remove(roomId); }
                 else BroadcastToRoom(roomId, $"INFO|{name} đã thoát phòng.");
                 UpdateServerLogs($"{name} đã thoát phòng {roomId}.Còn lại {gameRooms[roomId].Count} người.");//18.1.2026
+                if (gameRooms[roomId].Count == 1)
+                {
+                    Socket remain = gameRooms[roomId][0];
+                    readyClients.Remove(remain);
+                    currentTurn.Remove(roomId);
 
+                    SendResponse(remain, "INFO|Đối thủ đã thoát. Chuyển sang chế độ chơi 1 người.");
+                }
             }
         }
 
