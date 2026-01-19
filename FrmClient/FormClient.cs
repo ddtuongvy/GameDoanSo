@@ -1,0 +1,220 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Xml.Linq;
+
+namespace FrmClient
+{
+    public partial class FormClient : Form
+    {
+        Socket clientSocket;
+        bool isConnected = false;
+        HashSet<string> systemMessages = new HashSet<string>();
+        public FormClient()
+        {
+            InitializeComponent();
+        }
+
+        private void btnKetnoi_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                clientSocket.Connect(txtIP.Text, (int)numPort.Value);
+                isConnected = true;
+                Task.Run(() => ReceiveFromServer());
+                MessageBox.Show("Kết nối thành công!");
+            }
+            catch (Exception ex) { MessageBox.Show("Lỗi: " + ex.Message); }
+        }
+
+        private void btnNhap_Click(object sender, EventArgs e)
+        {
+			if (string.IsNullOrWhiteSpace(txtTen.Text))
+			{
+				MessageBox.Show("Vui lòng nhập tên trước khi tham gia!");
+				return;
+			}
+			Send("LOGIN|" + txtTen.Text);
+            btnTao.Enabled = btnVao.Enabled = true;
+        }
+
+        private void btnTao_Click(object sender, EventArgs e) 
+        { 
+            Send("CREATE_ROOM|" + txtMaphong.Text); 
+        }
+        private void btnVao_Click(object sender, EventArgs e)
+        {
+            Send("JOIN_ROOM|" + txtMaphong.Text);
+        }
+        private void btnThoat_Click(object sender, EventArgs e)
+        {
+            Send("LEAVE_ROOM");
+        }
+        private void btnSansang_Click(object sender, EventArgs e)
+        {
+            Send("READY");
+        }
+        private void btnGui_Click(object sender, EventArgs e) 
+        { 
+            Send("GUESS|" + numericUpDownSo.Text);
+        }
+        private void btnChoiLai_Click(object sender, EventArgs e)
+        {
+            listBoxKq.Items.Clear();
+            Send("PLAY_AGAIN");
+        }
+
+        private void Send(string msg)
+        {
+            try
+            {
+                if (clientSocket != null && clientSocket.Connected)
+                    clientSocket.Send(Encoding.UTF8.GetBytes(msg));
+            }
+            catch (SocketException)
+            {
+                MessageBox.Show("Mất kết nối tới server!", "Lỗi");
+                isConnected = false;
+            }
+        }
+
+        private void ReceiveFromServer()
+        {
+            byte[] buffer = new byte[1024];
+            while (isConnected)
+            {
+                try
+                {
+					int size = clientSocket.Receive(buffer);
+					if (size == 0) break;
+
+					string rawMsg = Encoding.UTF8.GetString(buffer, 0, size);
+
+					// Tách các tin nhắn bị dính nhau bởi dấu \n
+					string[] messages = rawMsg.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+					foreach (string msg in messages)
+					{
+						this.Invoke((Action)(() => ParseMessage(msg.Trim())));
+					}
+				}
+                catch { break; }
+            }
+        }
+
+        private void ParseMessage(string msg)
+        {
+            string[] parts = msg.Split('|');
+            switch (parts[0])
+            {
+                case "ROOM_OK":
+					txtMaphong.Text = parts[1];//18.1.2026
+					listBoxKq.Items.Add("Đã vào phòng: " + parts[1]);
+					listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
+					btnVao.Enabled = false; 
+                    break;
+
+				case "CURRENT_PLAYERS":
+					listBoxKq.Items.Add($"[Hệ thống]: Phòng hiện có {parts[1]} người chơi");
+					listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
+					break;
+
+				case "GUESS_RESULT":
+					if (parts.Length >= 5)
+					{
+						listBoxKq.Items.Add($"{parts[1]} đoán {parts[2]} → {parts[3]} (Lượt {parts[4]})");
+					}
+					else
+					{
+						listBoxKq.Items.Add("[Hệ thống]: " + msg);
+					}
+					listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
+					break;
+
+				case "TURN":
+					listBoxKq.Items.Add($"Lượt của {parts[1]}");
+					btnGui.Enabled = parts[1] == txtTen.Text;
+					break;
+
+
+                case "WINNER":
+                    MessageBox.Show(parts[1], "Kết thúc ván chơi");
+                    btnGui.Enabled = false;      // Khóa nút gửi số
+                    btnChoiLai.Enabled = true; //Hiện nút chơi lại
+                    systemMessages.Clear();
+                    break;
+
+				case "INFO":
+					listBoxKq.Items.Add("[Hệ thống]: " + parts[1]);
+					listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
+					string checkMsg = parts[1].ToLower();
+
+					if (checkMsg.Contains("đến lượt của bạn"))
+					{
+						btnGui.Enabled = true;
+						btnGui.BackColor = Color.LightGreen;
+					}
+					else if (checkMsg.Contains("không phải lượt"))
+					{
+						btnGui.Enabled = false;
+						btnGui.BackColor = Color.Gray;
+					}
+
+					break;
+
+				case "ERROR": MessageBox.Show(parts[1], "Lỗi"); break;
+            }
+        }
+
+        // Nút Ngắt kết nối 
+        private void btnNgat_Click(object sender, EventArgs e)
+        {
+            Disconnect();
+        }
+
+        private void Disconnect()
+        {
+            try
+            {
+                if (isConnected)
+                {
+                    isConnected = false;
+                    if (clientSocket != null)
+                    {
+                        // Thông báo cho Server biết mình thoát để Server xóa khỏi phòng
+                        Send("LEAVE_ROOM");
+
+                        clientSocket.Shutdown(SocketShutdown.Both);
+                        clientSocket.Close();
+                    }
+                    listBoxKq.Items.Add("Đã ngắt kết nối với Server.");
+                    listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
+                    btnKetnoi.Enabled = true;
+                    btnTao.Enabled = btnVao.Enabled = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi ngắt kết nối: " + ex.Message);
+            }
+        }
+
+        // Xử lý khi người dùng bấm dấu [X] trên cửa sổ
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            Disconnect();
+            base.OnFormClosing(e);
+        }
+
+    }
+}
+
