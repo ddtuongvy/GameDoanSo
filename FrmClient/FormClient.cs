@@ -172,19 +172,20 @@ namespace FrmClient
 					break;
 
 				case "INFO":
+                    string infoMsg = parts[1];
 					listBoxKq.Items.Add("[Hệ thống]: " + parts[1]);
 					listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
-					string checkMsg = parts[1].ToLower();
+                    string lowMsg = infoMsg.ToLower();
 
-					if (checkMsg.Contains("đến lượt của bạn"))
+					if (lowMsg.Contains("đến lượt của bạn"))
 					{
 						btnGui.Enabled = true;
 						btnGui.BackColor = Color.LightGreen;
 					}
-					else if (checkMsg.Contains("không phải lượt"))
+					else if (lowMsg.Contains("lượt của")|| lowMsg.Contains("chờ lượt"))
 					{
 						btnGui.Enabled = false;
-						btnGui.BackColor = Color.Gray;
+                        btnGui.BackColor = SystemColors.Control;//Trả về màu mắc định
 					}
 
 					break;
@@ -217,8 +218,8 @@ namespace FrmClient
                     listBoxKq.Items.Add("Đã ngắt kết nối với Server.");
                     listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
                     btnKetnoi.Enabled = true;
-                    btnTao.Enabled = btnVao.Enabled = false;
-                }
+					btnTao.Enabled = btnVao.Enabled = btnThoat.Enabled = btnGui.Enabled = btnChoiLai.Enabled = btnSansang.Enabled = false;
+				}
             }
             catch (Exception ex)
             {
