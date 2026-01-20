@@ -314,21 +314,24 @@ private void ProcessGuessLogic(Socket client, string payload)
 		//Xử lý logic Chơi lại
 		private void ProcessRestartGame(Socket client)
         {
-            if (!clientRoomMapping.ContainsKey(client)) return; string roomId = clientRoomMapping[client]; 
-            // Nếu đây là người đầu tiên nhấn "Chơi lại" sau khi ván cũ kết thúc 
-            // Kiểm tra xem trong phòng này đã có ai sẵn sàng chưa
-            bool isFirstReady = true; 
-            foreach (var s in gameRooms[roomId]) 
-            { 
-                if (readyClients.Contains(s)) { isFirstReady = false; break; }
-            } 
-            if (isFirstReady) 
-            { 
-                roomSecrets[roomId] = randomGenerator.Next(1, 101); 
-                UpdateServerLogs($"Phòng {roomId} bắt đầu ván mới. Số bí mật: {roomSecrets[roomId]}"); 
-                BroadcastToRoom(roomId, "INFO|Trận đấu mới đã bắt đầu! Hãy đoán số mới."); 
-            }      
-        }
+            if (!clientRoomMapping.ContainsKey(client)) return; 
+            string roomId = clientRoomMapping[client];
+			//Reset trạng thái sẵn sàng cho toàn bộ người trong phòng
+			foreach (var s in gameRooms[roomId].ToList())
+			{
+				readyClients.Remove(s);
+			}
+			//Reset các thông số game
+			currentTurn.Remove(roomId);
+			roomSecrets[roomId] = randomGenerator.Next(1, 101);
+			guessCounter[roomId] = 0; // Reset số lần đoán nếu cần
+
+			//Thông báo cho Client biết để mở lại nút "Sẵn sàng"
+			BroadcastToRoom(roomId, "RESTART_READY");
+			BroadcastToRoom(roomId, "INFO|Ván mới đã sẵn sàng. Vui lòng bấm Sẵn sàng để bắt đầu!");
+
+			UpdateServerLogs($"Phòng {roomId} đã reset ván mới.");
+		}
 
         //Xử lý logic Thoát phòng
         private void ProcessLeaveRoom(Socket client)

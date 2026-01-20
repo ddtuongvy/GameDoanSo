@@ -68,7 +68,18 @@ namespace FrmClient
         private void btnThoat_Click(object sender, EventArgs e)
         {
             Send("LEAVE_ROOM");
-        }
+			// Reset UI về trạng thái sau khi Login
+			btnTao.Enabled = btnVao.Enabled = true;
+			btnThoat.Enabled = btnSansang.Enabled = btnGui.Enabled = btnChoiLai.Enabled = false;
+			txtMaphong.Clear();
+			listBoxKq.Items.Add("Đã rời khỏi phòng.");
+		}
+
+		// Ngắt kết nối hoàn toàn khỏi Server
+		private void btnNgat_Click(object sender, EventArgs e)
+		{
+			Disconnect();
+		}
         private void btnSansang_Click(object sender, EventArgs e)
         {
             Send("READY");
@@ -88,7 +99,11 @@ namespace FrmClient
             try
             {
                 if (clientSocket != null && clientSocket.Connected)
-                    clientSocket.Send(Encoding.UTF8.GetBytes(msg));
+				{
+                    // Thêm \n để Server nhận diện kết thúc gói tin
+					byte[] data = Encoding.UTF8.GetBytes(msg + "\n");
+					clientSocket.Send(data);
+				}    
             }
             catch (SocketException)
             {
@@ -166,9 +181,14 @@ namespace FrmClient
                     break;
 
 				case "RESTART_READY":
-					btnSansang.Enabled = true;
-					btnChoiLai.Enabled = false;
-					btnGui.Enabled = false;
+					this.Invoke((Action)(() => {
+						listBoxKq.Items.Clear(); // Xóa lịch sử đoán cũ
+						btnSansang.Enabled = true; // Mở lại nút Sẵn sàng
+						btnChoiLai.Enabled = false; // Ẩn nút Chơi lại đi
+						btnGui.Enabled = false;
+						btnGui.BackColor = SystemColors.Control;
+						listBoxKq.Items.Add("[Hệ thống]: Hãy bấm Sẵn sàng để chơi ván mới.");
+					}));
 					break;
 
 				case "INFO":
