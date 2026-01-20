@@ -22,6 +22,21 @@ namespace FrmClient
         {
             InitializeComponent();
         }
+        private void FormClient_Load(object sender, EventArgs e)
+        {
+            // Chỉ cho phép kết nối trước
+            btnKetnoi.Enabled = true;
+
+            // Khóa tất cả các nút khác
+            btnNhap.Enabled = false;
+            btnTao.Enabled = false;
+            btnVao.Enabled = false;
+            btnThoat.Enabled = false;
+            btnSansang.Enabled = false;
+            btnGui.Enabled = false;
+            btnChoiLai.Enabled = false;
+            btnNgat.Enabled = false;
+        }
 
         private void btnKetnoi_Click(object sender, EventArgs e)
         {
@@ -31,6 +46,11 @@ namespace FrmClient
                 clientSocket.Connect(txtIP.Text, (int)numPort.Value);
                 isConnected = true;
                 Task.Run(() => ReceiveFromServer());
+                btnKetnoi.Enabled = false;
+                btnTao.Enabled = true;
+                btnVao.Enabled = true;
+                btnNgat.Enabled = true;   
+                btnNhap.Enabled = true;
                 MessageBox.Show("Kết nối thành công!");
             }
             catch (Exception ex) { MessageBox.Show("Lỗi: " + ex.Message); }
@@ -68,6 +88,14 @@ namespace FrmClient
         private void btnThoat_Click(object sender, EventArgs e)
         {
             Send("LEAVE_ROOM");
+            btnTao.Enabled = true;
+            btnVao.Enabled = true;
+            btnThoat.Enabled = false;
+            btnSansang.Enabled = false;
+            btnGui.Enabled = false;
+            btnChoiLai.Enabled = false;
+            txtMaphong.Clear();
+            listBoxKq.Items.Add("[Hệ thống]: Bạn đã rời phòng.");
         }
         private void btnSansang_Click(object sender, EventArgs e)
         {
@@ -127,11 +155,13 @@ namespace FrmClient
             switch (parts[0])
             {
                 case "ROOM_OK":
-					btnTao.Enabled = btnVao.Enabled = false;
-					txtMaphong.Text = parts[1];
+                    btnTao.Enabled = false;
+                    btnVao.Enabled = false;
+                    btnThoat.Enabled = true;   
+                    btnSansang.Enabled = true; 
+                    txtMaphong.Text = parts[1];
 					listBoxKq.Items.Add("Đã vào phòng: " + parts[1]);
 					listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
-					btnVao.Enabled = false; 
                     break;
 
 				case "CURRENT_PLAYERS":
@@ -190,7 +220,12 @@ namespace FrmClient
 
 					break;
 
-				case "ERROR": MessageBox.Show(parts[1], "Lỗi"); break;
+                case "SERVER_STOPPED":
+                    MessageBox.Show(parts[1], "Hệ thống");
+                    Disconnect();
+                    break;
+
+                case "ERROR": MessageBox.Show(parts[1], "Lỗi"); break;
             }
         }
 
@@ -209,16 +244,14 @@ namespace FrmClient
                     isConnected = false;
                     if (clientSocket != null)
                     {
-                        // Thông báo cho Server biết mình thoát để Server xóa khỏi phòng
-                        Send("LEAVE_ROOM");
-
                         clientSocket.Shutdown(SocketShutdown.Both);
                         clientSocket.Close();
                     }
                     listBoxKq.Items.Add("Đã ngắt kết nối với Server.");
                     listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
                     btnKetnoi.Enabled = true;
-					btnTao.Enabled = btnVao.Enabled = btnThoat.Enabled = btnGui.Enabled = btnChoiLai.Enabled = btnSansang.Enabled = false;
+                    btnNgat.Enabled = false; 
+                    btnTao.Enabled = btnVao.Enabled = btnThoat.Enabled = btnGui.Enabled = btnChoiLai.Enabled = btnSansang.Enabled = false;
 				}
             }
             catch (Exception ex)

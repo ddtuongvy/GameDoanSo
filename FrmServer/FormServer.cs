@@ -33,6 +33,9 @@ namespace FrmServer
 		public FormServer()
         {
             InitializeComponent();
+
+            btnStop.Enabled = false;
+            btnStart.Enabled = true;
         }
 
         //=== Quản lý dịch vụ Server ===
@@ -51,6 +54,8 @@ namespace FrmServer
 
                 UpdateServerLogs($"Server khởi động trên port {port}...");
                 btnStart.Enabled = false;
+                btnStop.Enabled = true;
+
             }
             catch (Exception ex)
             {
@@ -337,7 +342,7 @@ namespace FrmServer
             if (clientRoomMapping.ContainsKey(client))
             {
                 string roomId = clientRoomMapping[client];
-                string name = clientNames.ContainsKey(client) ? clientNames[client] : "Ẩn danh";
+                string name = clientNames[client];
                 gameRooms[roomId].Remove(client);
                 clientRoomMapping.Remove(client);
                 readyClients.Remove(client);
@@ -385,9 +390,16 @@ namespace FrmServer
                 {
                     try
                     {
-                        SendResponse(client, "INFO|Server đang dừng dịch vụ...");
-                        client.Shutdown(SocketShutdown.Both);
-                        client.Close();
+                        if (client.Connected)
+                        {
+                            
+                            byte[] data = Encoding.UTF8.GetBytes("SERVER_STOPPED|Hệ thống: Server đã dừng dịch vụ.\n");
+                            client.Send(data);
+
+                            // Đợi một chút xíu để tin nhắn kịp truyền đi
+                            client.Shutdown(SocketShutdown.Both);
+                            client.Close();
+                        }
                     }
                     catch { }
                 }
@@ -397,13 +409,14 @@ namespace FrmServer
                 clientRoomMapping.Clear();
                 readyClients.Clear();
 
-                if (serverSocket != null)
+                if (serverSocket != null) //Đóng socket tổng
                 {
                     serverSocket.Close();
                 }
 
                 UpdateServerLogs("Server đã dừng.");
-                btnStart.Enabled = true; // Cho phép bấm Start lại
+                btnStart.Enabled = true; 
+                btnStop.Enabled = false;
             }
             catch (Exception ex)
             {
