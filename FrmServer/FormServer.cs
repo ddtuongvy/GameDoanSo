@@ -96,8 +96,23 @@ namespace FrmServer
                     switch (parts[0])
                     {
                         case "LOGIN": // Format: LOGIN|TenNguoiChoi
-                            clientNames[clientSocket] = parts[1];
-                            UpdateServerLogs($"{parts[1]} đã đăng nhập.");
+                            string playerName = parts.Length > 1 ? parts[1] : string.Empty;
+                            clientNames[clientSocket] = playerName;
+                            UpdateServerLogs($"{playerName} đã đăng nhập.");
+                            // Gửi xác nhận đăng nhập cho client
+                            SendResponse(clientSocket, $"LOGIN_OK|{playerName}");
+                            // Gửi thông báo ngay cho chính client
+                            SendResponse(clientSocket, $"INFO|Bạn đã đăng nhập thành công, chào {playerName}.");
+                            // Thông báo tới các client khác rằng có người mới kết nối
+                            foreach (var other in clientNames.Keys.ToList())
+                            {
+                                try
+                                {
+                                    if (other != clientSocket && other.Connected)
+                                        SendResponse(other, $"INFO|{playerName} đã kết nối.");
+                                }
+                                catch { }
+                            }
                             break;
 
                         case "CREATE_ROOM": // Format: CREATE_ROOM|MaPhong
@@ -206,25 +221,25 @@ namespace FrmServer
 					return;
 				}
 				gameRooms[roomId].Add(client);
-                clientRoomMapping[client] = roomId;
-                SendResponse(client, $"ROOM_OK|{roomId}");
+				clientRoomMapping[client] = roomId;
+				SendResponse(client, $"ROOM_OK|{roomId}");
 
                 string name = clientNames[client];
 
                 int current = gameRooms[roomId].Count;
-				// Thông báo cho cả phòng biết số lượng người (2/2)
-				BroadcastToRoom(roomId, $"INFO|{name} đã tham gia. Hiện có {current}/2 người chơi. Ấn Sẵn sàng để bắt đầu!");
-				UpdateServerLogs($"{name} vào phòng {roomId}. Hiện có {current}/2 người chơi.");
-			}
-			else
+                // Thông báo cho cả phòng biết số lượng người (2/2)
+                BroadcastToRoom(roomId, $"INFO|{name} đã tham gia. Hiện có {current}/2 người chơi. Ấn Sẵn sàng để bắt đầu!");
+                UpdateServerLogs($"{name} vào phòng {roomId}. Hiện có {current}/2 người chơi.");
+            }
+            else
             {
                 SendResponse(client, "ERROR|Phòng không tồn tại!");
             }
         }
 
-		//Xử lý logic sẵn sàng 
-		private void ProcessReady(Socket client)
-		{
+        //Xử lý logic sẵn sàng 
+        private void ProcessReady(Socket client)
+        {
             if (!IsLoggedIn(client))
             {
                 SendResponse(client, "ERROR|Bạn chưa nhập tên!");
@@ -266,10 +281,10 @@ namespace FrmServer
             }
         }
 
-		//Xử lý logic dự đoán số
+        //Xử lý logic dự đoán số
         private void ProcessGuessLogic(Socket client, string payload)
-		{
-			if (!clientRoomMapping.ContainsKey(client)) return;
+        {
+            if (!clientRoomMapping.ContainsKey(client)) return;
             if (!readyClients.Contains(client)) { SendResponse(client, "ERROR|Bạn chưa Sẵn sàng!"); return; }
 
             string roomId = clientRoomMapping[client];
@@ -306,21 +321,21 @@ namespace FrmServer
             }
         }
 
-		// Hàm phụ để đổi lượt 
-		private void SwitchTurn(string roomId, Socket currentClient)
-		{
-			int index = gameRooms[roomId].IndexOf(currentClient);
-			int nextIndex = (index + 1) % gameRooms[roomId].Count;
-			Socket nextPlayer = gameRooms[roomId][nextIndex];
+        // Hàm phụ để đổi lượt 
+        private void SwitchTurn(string roomId, Socket currentClient)
+        {
+            int index = gameRooms[roomId].IndexOf(currentClient);
+            int nextIndex = (index + 1) % gameRooms[roomId].Count;
+            Socket nextPlayer = gameRooms[roomId][nextIndex];
 
-			currentTurn[roomId] = nextPlayer;
+            currentTurn[roomId] = nextPlayer;
 
             SendResponse(currentClient, "INFO|Bạn đã đoán sai, chờ lượt tiếp theo.");
             SendResponse(nextPlayer, "INFO|Đến lượt của bạn đoán!");
         }
 
-		//Xử lý logic Chơi lại
-		private void ProcessRestartGame(Socket client)
+        //Xử lý logic Chơi lại
+        private void ProcessRestartGame(Socket client)
         {
             if (!clientRoomMapping.ContainsKey(client)) return;
             string roomId = clientRoomMapping[client];

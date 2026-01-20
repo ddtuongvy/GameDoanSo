@@ -64,11 +64,9 @@
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 28.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
-            this.label1.Location = new System.Drawing.Point(254, 22);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(401, 54);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "GAME ĐOÁN SỐ";
+            this.label1.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.label1.Padding = new System.Windows.Forms.Padding(0, 10, 0, 10);
             // 
             // grbConnect
             // 
@@ -98,6 +96,8 @@
             this.btnNgat.Text = "Ngắt kết nối";
             this.btnNgat.UseVisualStyleBackColor = false;
             this.btnNgat.Click += new System.EventHandler(this.btnNgat_Click);
+            // Anchor ngắt kết nối về phía phải dưới của groupbox
+            this.btnNgat.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             // 
             // btnKetnoi
             // 
@@ -110,6 +110,7 @@
             this.btnKetnoi.Text = "Kết nối";
             this.btnKetnoi.UseVisualStyleBackColor = false;
             this.btnKetnoi.Click += new System.EventHandler(this.btnKetnoi_Click);
+            this.btnKetnoi.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             // 
             // txtIP
             // 
@@ -118,6 +119,8 @@
             this.txtIP.Size = new System.Drawing.Size(150, 30);
             this.txtIP.TabIndex = 5;
             this.txtIP.Text = "127.0.0.1";
+            // Cho phép txtIP co dãn theo cạnh phải của groupbox
+            this.txtIP.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             // 
             // label3
             // 
@@ -145,6 +148,7 @@
             0,
             0,
             0});
+            this.numPort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
             // 
             // label2
             // 
@@ -197,6 +201,8 @@
             this.btnNhap.Text = "Nhập";
             this.btnNhap.UseVisualStyleBackColor = false;
             this.btnNhap.Click += new System.EventHandler(this.btnNhap_Click);
+            // Đặt btnNhap neo về phía trên phải trong groupbox
+            this.btnNhap.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             // 
             // txtTen
             // 
@@ -204,6 +210,9 @@
             this.txtTen.Name = "txtTen";
             this.txtTen.Size = new System.Drawing.Size(252, 30);
             this.txtTen.TabIndex = 5;
+            // Cho phép txtTen co dãn theo chiều ngang
+            this.txtTen.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
             // 
             // btnVao
             // 
@@ -216,6 +225,7 @@
             this.btnVao.Text = "Vào phòng";
             this.btnVao.UseVisualStyleBackColor = false;
             this.btnVao.Click += new System.EventHandler(this.btnVao_Click);
+            this.btnVao.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             // 
             // label6
             // 
@@ -237,6 +247,7 @@
             this.btnTao.Text = "Tạo phòng";
             this.btnTao.UseVisualStyleBackColor = false;
             this.btnTao.Click += new System.EventHandler(this.btnTao_Click);
+            this.btnTao.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             // 
             // txtMaphong
             // 
@@ -244,6 +255,8 @@
             this.txtMaphong.Name = "txtMaphong";
             this.txtMaphong.Size = new System.Drawing.Size(214, 30);
             this.txtMaphong.TabIndex = 1;
+            this.txtMaphong.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
             // 
             // label4
             // 
@@ -286,6 +299,7 @@
             0,
             0,
             0});
+            this.numericUpDownSo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
             // 
             // btnSansang
             // 
@@ -297,6 +311,7 @@
             this.btnSansang.Text = "Sẵn sàng";
             this.btnSansang.UseVisualStyleBackColor = false;
             this.btnSansang.Click += new System.EventHandler(this.btnSansang_Click);
+            this.btnSansang.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             // 
             // btnChoiLai
             // 
@@ -308,6 +323,7 @@
             this.btnChoiLai.Text = "Chơi lại";
             this.btnChoiLai.UseVisualStyleBackColor = false;
             this.btnChoiLai.Click += new System.EventHandler(this.btnChoiLai_Click);
+            this.btnChoiLai.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             // 
             // btnGui
             // 
@@ -319,6 +335,7 @@
             this.btnGui.Text = "Gửi";
             this.btnGui.UseVisualStyleBackColor = false;
             this.btnGui.Click += new System.EventHandler(this.btnGui_Click);
+            this.btnGui.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
             // 
             // label5
             // 

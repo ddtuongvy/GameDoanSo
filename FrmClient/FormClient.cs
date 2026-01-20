@@ -58,32 +58,33 @@ namespace FrmClient
 
         private void btnNhap_Click(object sender, EventArgs e)
         {
-			if (string.IsNullOrWhiteSpace(txtTen.Text))
-			{
-				MessageBox.Show("Vui lòng nhập tên trước khi tham gia!");
-				return;
-			}
-			Send("LOGIN|" + txtTen.Text);
-            btnTao.Enabled = btnVao.Enabled = true;
+            if (string.IsNullOrWhiteSpace(txtTen.Text))
+            {
+                MessageBox.Show("Vui lòng nhập tên trước khi tham gia!");
+                return;
+            }
+            Send("LOGIN|" + txtTen.Text);
+            // wait for server confirmation before locking name and enabling room controls
+            // btnTao.Enabled = btnVao.Enabled = true; (moved to LOGIN_OK handler)
         }
 
         private void btnTao_Click(object sender, EventArgs e) 
         {
-			if (string.IsNullOrWhiteSpace(txtTen.Text))
-			{
-				MessageBox.Show("Bạn chưa nhập tên!");
-				return;
-			}
-			Send("CREATE_ROOM|" + txtMaphong.Text); 
+            if (string.IsNullOrWhiteSpace(txtTen.Text))
+            {
+                MessageBox.Show("Bạn chưa nhập tên!");
+                return;
+            }
+            Send("CREATE_ROOM|" + txtMaphong.Text); 
         }
         private void btnVao_Click(object sender, EventArgs e)
         {
-			if (string.IsNullOrWhiteSpace(txtTen.Text))
-			{
-				MessageBox.Show("Bạn chưa nhập tên!");
-				return;
-			}
-			Send("JOIN_ROOM|" + txtMaphong.Text);
+            if (string.IsNullOrWhiteSpace(txtTen.Text))
+            {
+                MessageBox.Show("Bạn chưa nhập tên!");
+                return;
+            }
+            Send("JOIN_ROOM|" + txtMaphong.Text);
         }
         private void btnThoat_Click(object sender, EventArgs e)
         {
@@ -100,6 +101,8 @@ namespace FrmClient
         private void btnSansang_Click(object sender, EventArgs e)
         {
             Send("READY");
+            // Disable Ready immediately to prevent multiple clicks while waiting/playing
+            btnSansang.Enabled = false;
         }
         private void btnGui_Click(object sender, EventArgs e) 
         { 
@@ -132,19 +135,19 @@ namespace FrmClient
             {
                 try
                 {
-					int size = clientSocket.Receive(buffer);
-					if (size == 0) break;
+                    int size = clientSocket.Receive(buffer);
+                    if (size == 0) break;
 
-					string rawMsg = Encoding.UTF8.GetString(buffer, 0, size);
+                    string rawMsg = Encoding.UTF8.GetString(buffer, 0, size);
 
-					// Tách các tin nhắn bị dính nhau bởi dấu \n
-					string[] messages = rawMsg.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    // Tách các tin nhắn bị dính nhau bởi dấu \n
+                    string[] messages = rawMsg.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
-					foreach (string msg in messages)
-					{
-						this.Invoke((Action)(() => ParseMessage(msg.Trim())));
-					}
-				}
+                    foreach (string msg in messages)
+                    {
+                        this.Invoke((Action)(() => ParseMessage(msg.Trim())));
+                    }
+                }
                 catch { break; }
             }
         }
@@ -154,71 +157,98 @@ namespace FrmClient
             string[] parts = msg.Split('|');
             switch (parts[0])
             {
+                case "LOGIN_OK":
+                    // Server confirmed login — lock name input until disconnect
+                    string name = parts.Length > 1 ? parts[1] : txtTen.Text;
+                    MessageBox.Show($"Đăng nhập thành công: {name}", "Thông báo");
+                    txtTen.Enabled = false;
+                    btnNhap.Enabled = false;
+                    // Enable room controls after successful login
+                    btnTao.Enabled = true;
+                    btnVao.Enabled = true;
+                    break;
+
                 case "ROOM_OK":
                     btnTao.Enabled = false;
                     btnVao.Enabled = false;
                     btnThoat.Enabled = true;   
                     btnSansang.Enabled = true; 
                     txtMaphong.Text = parts[1];
-					listBoxKq.Items.Add("Đã vào phòng: " + parts[1]);
-					listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
+                    listBoxKq.Items.Add("Đã vào phòng: " + parts[1]);
+                    listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
                     break;
 
-				case "CURRENT_PLAYERS":
-					listBoxKq.Items.Add($"[Hệ thống]: Phòng hiện có {parts[1]} người chơi");
-					listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
-					break;
+                case "CURRENT_PLAYERS":
+                    listBoxKq.Items.Add($"[Hệ thống]: Phòng hiện có {parts[1]} người chơi");
+                    listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
+                    break;
 
-				case "GUESS_RESULT":
-					if (parts.Length >= 5)
-					{
-						listBoxKq.Items.Add($"{parts[1]} đoán {parts[2]} → {parts[3]} (Lượt {parts[4]})");
-					}
-					else
-					{
-						listBoxKq.Items.Add("[Hệ thống]: " + msg);
-					}
-					listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
-					break;
+                case "GUESS_RESULT":
+                    if (parts.Length >= 5)
+                    {
+                        listBoxKq.Items.Add($"{parts[1]} đoán {parts[2]} → {parts[3]} (Lượt {parts[4]})");
+                    }
+                    else
+                    {
+                        listBoxKq.Items.Add("[Hệ thống]: " + msg);
+                    }
+                    listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
+                    break;
 
-				case "TURN":
-					listBoxKq.Items.Add($"Lượt của {parts[1]}");
-					btnGui.Enabled = parts[1] == txtTen.Text;
-					break;
-
+                case "TURN":
+                    listBoxKq.Items.Add($"Lượt của {parts[1]}");
+                    btnGui.Enabled = parts[1] == txtTen.Text;
+                    // Khi trận đấu đã bắt đầu / có lượt, khóa nút Sẵn sàng
+                    btnSansang.Enabled = false;
+                    break;
 
                 case "WINNER":
                     MessageBox.Show(parts[1], "Kết thúc ván chơi");
                     btnGui.Enabled = false;      // Khóa nút gửi số
                     btnChoiLai.Enabled = true; //Hiện nút chơi lại
-					btnSansang.Enabled = false;// Khóa nút sẵn sàng
-					systemMessages.Clear();
+                    btnSansang.Enabled = false;// Khóa nút sẵn sàng
+                    systemMessages.Clear();
                     break;
 
-				case "RESTART_READY":
-					btnSansang.Enabled = true;
-					btnChoiLai.Enabled = false;
-					btnGui.Enabled = false;
-					break;
+                case "RESTART_READY":
+                    btnSansang.Enabled = true;
+                    btnChoiLai.Enabled = false;
+                    btnGui.Enabled = false;
+                    break;
 
-				case "INFO":
+                case "INFO":
                     string infoMsg = parts[1];
-					listBoxKq.Items.Add("[Hệ thống]: " + parts[1]);
-					listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
+                    listBoxKq.Items.Add("[Hệ thống]: " + parts[1]);
+                    listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
                     string lowMsg = infoMsg.ToLower();
 
-					if (lowMsg.Contains("đến lượt của bạn"))
-					{
-						btnGui.Enabled = true;
-						btnGui.BackColor = Color.LightGreen;
-					}
-					else if (lowMsg.Contains("lượt của")|| lowMsg.Contains("chờ lượt"))
-					{
-						btnGui.Enabled = false;
-                        btnGui.BackColor = SystemColors.Control;//Trả về màu mắc định
-					}
+                    // Nếu đối thủ đã thoát và chuyển sang chế độ chơi đơn => mở lại nút Sẵn sàng để người ở lại có thể bắt đầu
+                    if (lowMsg.Contains("đối thủ đã thoát") || lowMsg.Contains("chuyển sang chế độ chơi 1 người"))
+                    {
+                        btnSansang.Enabled = true;
+                    }
 
-					break;
+                    if (lowMsg.Contains("đến lượt của bạn"))
+                    {
+                        btnGui.Enabled = true;
+                        btnGui.BackColor = Color.LightGreen;
+                        // Khóa nút Sẵn sàng khi đang đoán
+                        btnSansang.Enabled = false;
+                    }
+                    else if (lowMsg.Contains("lượt của")|| lowMsg.Contains("chờ lượt"))
+                    {
+                        btnGui.Enabled = false;
+                        btnGui.BackColor = SystemColors.Control;//Trả về màu mắc định
+                        // Đối phương đang đoán -> cũng khóa Ready
+                        btnSansang.Enabled = false;
+                    }
+                    else if (lowMsg.Contains("chế độ chơi đơn") || lowMsg.Contains("bắt đầu chơi"))
+                    {
+                        // Khi trận đấu bắt đầu (1 hoặc 2 người), khóa Ready
+                        btnSansang.Enabled = false;
+                    }
+
+                    break;
 
                 case "SERVER_STOPPED":
                     MessageBox.Show(parts[1], "Hệ thống");
@@ -252,7 +282,10 @@ namespace FrmClient
                     btnKetnoi.Enabled = true;
                     btnNgat.Enabled = false; 
                     btnTao.Enabled = btnVao.Enabled = btnThoat.Enabled = btnGui.Enabled = btnChoiLai.Enabled = btnSansang.Enabled = false;
-				}
+                    // Khi ngắt kết nối: cho phép nhập tên lại
+                    txtTen.Enabled = true;
+                    btnNhap.Enabled = false;
+                }
             }
             catch (Exception ex)
             {
