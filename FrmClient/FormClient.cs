@@ -17,7 +17,6 @@ namespace FrmClient
     {
         Socket clientSocket;
         bool isConnected = false;
-        HashSet<string> systemMessages = new HashSet<string>();
         public FormClient()
         {
             InitializeComponent();
@@ -64,8 +63,6 @@ namespace FrmClient
                 return;
             }
             Send("LOGIN|" + txtTen.Text);
-            // wait for server confirmation before locking name and enabling room controls
-            // btnTao.Enabled = btnVao.Enabled = true; (moved to LOGIN_OK handler)
         }
 
         private void btnTao_Click(object sender, EventArgs e) 
@@ -95,6 +92,7 @@ namespace FrmClient
             btnSansang.Enabled = false;
             btnGui.Enabled = false;
             btnChoiLai.Enabled = false;
+
             txtMaphong.Clear();
             listBoxKq.Items.Add("[Hệ thống]: Bạn đã rời phòng.");
         }
@@ -158,14 +156,11 @@ namespace FrmClient
             switch (parts[0])
             {
                 case "LOGIN_OK":
-                    // Server confirmed login — lock name input until disconnect
+                    // đăng nhập thành công -> khóa tên và nút nhập cho đến khi ngắt kết nối
                     string name = parts.Length > 1 ? parts[1] : txtTen.Text;
                     MessageBox.Show($"Đăng nhập thành công: {name}", "Thông báo");
                     txtTen.Enabled = false;
                     btnNhap.Enabled = false;
-                    // Enable room controls after successful login
-                    btnTao.Enabled = true;
-                    btnVao.Enabled = true;
                     break;
 
                 case "ROOM_OK":
@@ -174,32 +169,9 @@ namespace FrmClient
                     btnThoat.Enabled = true;   
                     btnSansang.Enabled = true; 
                     txtMaphong.Text = parts[1];
+
                     listBoxKq.Items.Add("Đã vào phòng: " + parts[1]);
                     listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
-                    break;
-
-                case "CURRENT_PLAYERS":
-                    listBoxKq.Items.Add($"[Hệ thống]: Phòng hiện có {parts[1]} người chơi");
-                    listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
-                    break;
-
-                case "GUESS_RESULT":
-                    if (parts.Length >= 5)
-                    {
-                        listBoxKq.Items.Add($"{parts[1]} đoán {parts[2]} → {parts[3]} (Lượt {parts[4]})");
-                    }
-                    else
-                    {
-                        listBoxKq.Items.Add("[Hệ thống]: " + msg);
-                    }
-                    listBoxKq.SelectedIndex = listBoxKq.Items.Count - 1;
-                    break;
-
-                case "TURN":
-                    listBoxKq.Items.Add($"Lượt của {parts[1]}");
-                    btnGui.Enabled = parts[1] == txtTen.Text;
-                    // Khi trận đấu đã bắt đầu / có lượt, khóa nút Sẵn sàng
-                    btnSansang.Enabled = false;
                     break;
 
                 case "WINNER":
@@ -207,7 +179,6 @@ namespace FrmClient
                     btnGui.Enabled = false;      // Khóa nút gửi số
                     btnChoiLai.Enabled = true; //Hiện nút chơi lại
                     btnSansang.Enabled = false;// Khóa nút sẵn sàng
-                    systemMessages.Clear();
                     break;
 
                 case "RESTART_READY":
@@ -299,7 +270,6 @@ namespace FrmClient
             Disconnect();
             base.OnFormClosing(e);
         }
-
     }
 }
 

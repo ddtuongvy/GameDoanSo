@@ -52,6 +52,8 @@
             this.btnGui = new System.Windows.Forms.Button();
             this.label5 = new System.Windows.Forms.Label();
             this.listBoxKq = new System.Windows.Forms.ListBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
             this.grbConnect.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numPort)).BeginInit();
             this.grbPhong.SuspendLayout();
@@ -62,11 +64,15 @@
             // label1
             // 
             this.label1.AutoSize = true;
+            this.label1.Dock = System.Windows.Forms.DockStyle.Top;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 28.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
-            this.label1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.label1.Location = new System.Drawing.Point(0, 0);
+            this.label1.Name = "label1";
             this.label1.Padding = new System.Windows.Forms.Padding(0, 10, 0, 10);
+            this.label1.Size = new System.Drawing.Size(0, 74);
+            this.label1.TabIndex = 5;
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // grbConnect
             // 
@@ -87,6 +93,7 @@
             // 
             // btnNgat
             // 
+            this.btnNgat.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnNgat.BackColor = System.Drawing.Color.Red;
             this.btnNgat.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
             this.btnNgat.Location = new System.Drawing.Point(214, 113);
@@ -96,11 +103,10 @@
             this.btnNgat.Text = "Ngắt kết nối";
             this.btnNgat.UseVisualStyleBackColor = false;
             this.btnNgat.Click += new System.EventHandler(this.btnNgat_Click);
-            // Anchor ngắt kết nối về phía phải dưới của groupbox
-            this.btnNgat.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             // 
             // btnKetnoi
             // 
+            this.btnKetnoi.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btnKetnoi.BackColor = System.Drawing.Color.LimeGreen;
             this.btnKetnoi.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
             this.btnKetnoi.Location = new System.Drawing.Point(49, 114);
@@ -110,17 +116,15 @@
             this.btnKetnoi.Text = "Kết nối";
             this.btnKetnoi.UseVisualStyleBackColor = false;
             this.btnKetnoi.Click += new System.EventHandler(this.btnKetnoi_Click);
-            this.btnKetnoi.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             // 
             // txtIP
             // 
+            this.txtIP.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.txtIP.Location = new System.Drawing.Point(243, 55);
             this.txtIP.Name = "txtIP";
             this.txtIP.Size = new System.Drawing.Size(150, 30);
             this.txtIP.TabIndex = 5;
             this.txtIP.Text = "127.0.0.1";
-            // Cho phép txtIP co dãn theo cạnh phải của groupbox
-            this.txtIP.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             // 
             // label3
             // 
@@ -148,7 +152,6 @@
             0,
             0,
             0});
-            this.numPort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
             // 
             // label2
             // 
@@ -183,7 +186,7 @@
             // 
             this.btnThoat.BackColor = System.Drawing.SystemColors.Highlight;
             this.btnThoat.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.btnThoat.Location = new System.Drawing.Point(354, 121);
+            this.btnThoat.Location = new System.Drawing.Point(356, 121);
             this.btnThoat.Name = "btnThoat";
             this.btnThoat.Size = new System.Drawing.Size(152, 47);
             this.btnThoat.TabIndex = 4;
@@ -193,29 +196,28 @@
             // 
             // btnNhap
             // 
+            this.btnNhap.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnNhap.BackColor = System.Drawing.SystemColors.ActiveBorder;
-            this.btnNhap.Location = new System.Drawing.Point(392, 29);
+            this.btnNhap.Location = new System.Drawing.Point(393, 29);
             this.btnNhap.Name = "btnNhap";
             this.btnNhap.Size = new System.Drawing.Size(91, 37);
             this.btnNhap.TabIndex = 3;
             this.btnNhap.Text = "Nhập";
             this.btnNhap.UseVisualStyleBackColor = false;
             this.btnNhap.Click += new System.EventHandler(this.btnNhap_Click);
-            // Đặt btnNhap neo về phía trên phải trong groupbox
-            this.btnNhap.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             // 
             // txtTen
             // 
-            this.txtTen.Location = new System.Drawing.Point(125, 34);
-            this.txtTen.Name = "txtTen";
-            this.txtTen.Size = new System.Drawing.Size(252, 30);
-            this.txtTen.TabIndex = 5;
-            // Cho phép txtTen co dãn theo chiều ngang
-            this.txtTen.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.txtTen.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtTen.Location = new System.Drawing.Point(153, 34);
+            this.txtTen.Name = "txtTen";
+            this.txtTen.Size = new System.Drawing.Size(214, 30);
+            this.txtTen.TabIndex = 5;
             // 
             // btnVao
             // 
+            this.btnVao.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btnVao.BackColor = System.Drawing.SystemColors.Highlight;
             this.btnVao.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
             this.btnVao.Location = new System.Drawing.Point(182, 123);
@@ -225,47 +227,46 @@
             this.btnVao.Text = "Vào phòng";
             this.btnVao.UseVisualStyleBackColor = false;
             this.btnVao.Click += new System.EventHandler(this.btnVao_Click);
-            this.btnVao.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             // 
             // label6
             // 
             this.label6.AutoSize = true;
             this.label6.Location = new System.Drawing.Point(23, 39);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(96, 25);
+            this.label6.Size = new System.Drawing.Size(52, 25);
             this.label6.TabIndex = 4;
-            this.label6.Text = "Nhập tên ";
+            this.label6.Text = "Tên ";
             // 
             // btnTao
             // 
+            this.btnTao.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btnTao.BackColor = System.Drawing.SystemColors.Highlight;
             this.btnTao.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.btnTao.Location = new System.Drawing.Point(20, 121);
+            this.btnTao.Location = new System.Drawing.Point(28, 123);
             this.btnTao.Name = "btnTao";
-            this.btnTao.Size = new System.Drawing.Size(128, 47);
+            this.btnTao.Size = new System.Drawing.Size(128, 45);
             this.btnTao.TabIndex = 2;
             this.btnTao.Text = "Tạo phòng";
             this.btnTao.UseVisualStyleBackColor = false;
             this.btnTao.Click += new System.EventHandler(this.btnTao_Click);
-            this.btnTao.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             // 
             // txtMaphong
             // 
-            this.txtMaphong.Location = new System.Drawing.Point(197, 83);
+            this.txtMaphong.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtMaphong.Location = new System.Drawing.Point(153, 81);
             this.txtMaphong.Name = "txtMaphong";
             this.txtMaphong.Size = new System.Drawing.Size(214, 30);
             this.txtMaphong.TabIndex = 1;
-            this.txtMaphong.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
             // 
             // label4
             // 
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point(23, 86);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(151, 25);
+            this.label4.Size = new System.Drawing.Size(100, 25);
             this.label4.TabIndex = 0;
-            this.label4.Text = "Nhập mã phòng";
+            this.label4.Text = "Mã phòng";
             // 
             // grbChoi
             // 
@@ -299,10 +300,10 @@
             0,
             0,
             0});
-            this.numericUpDownSo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
             // 
             // btnSansang
             // 
+            this.btnSansang.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSansang.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(128)))));
             this.btnSansang.Location = new System.Drawing.Point(635, 30);
             this.btnSansang.Name = "btnSansang";
@@ -311,10 +312,10 @@
             this.btnSansang.Text = "Sẵn sàng";
             this.btnSansang.UseVisualStyleBackColor = false;
             this.btnSansang.Click += new System.EventHandler(this.btnSansang_Click);
-            this.btnSansang.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             // 
             // btnChoiLai
             // 
+            this.btnChoiLai.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnChoiLai.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(128)))));
             this.btnChoiLai.Location = new System.Drawing.Point(807, 30);
             this.btnChoiLai.Name = "btnChoiLai";
@@ -323,7 +324,6 @@
             this.btnChoiLai.Text = "Chơi lại";
             this.btnChoiLai.UseVisualStyleBackColor = false;
             this.btnChoiLai.Click += new System.EventHandler(this.btnChoiLai_Click);
-            this.btnChoiLai.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             // 
             // btnGui
             // 
@@ -335,7 +335,6 @@
             this.btnGui.Text = "Gửi";
             this.btnGui.UseVisualStyleBackColor = false;
             this.btnGui.Click += new System.EventHandler(this.btnGui_Click);
-            this.btnGui.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
             // 
             // label5
             // 
@@ -352,11 +351,33 @@
             this.listBoxKq.FormattingEnabled = true;
             this.listBoxKq.ItemHeight = 25;
             this.listBoxKq.Items.AddRange(new object[] {
-            "KẾT QUẢ TRÒ CHƠI"});
+            "THÔNG BÁO HOẠT ĐỘNG"});
             this.listBoxKq.Location = new System.Drawing.Point(22, 393);
             this.listBoxKq.Name = "listBoxKq";
             this.listBoxKq.Size = new System.Drawing.Size(976, 179);
             this.listBoxKq.TabIndex = 4;
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Font = new System.Drawing.Font("Algerian", 25.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label7.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
+            this.label7.Location = new System.Drawing.Point(315, 9);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(368, 46);
+            this.label7.TabIndex = 6;
+            this.label7.Text = "SECRET NUMBER ";
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Font = new System.Drawing.Font("Algerian", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label8.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
+            this.label8.Location = new System.Drawing.Point(423, 55);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(147, 34);
+            this.label8.TabIndex = 7;
+            this.label8.Text = "(1 - 100)";
             // 
             // FormClient
             // 
@@ -364,6 +385,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(1025, 584);
+            this.Controls.Add(this.label8);
+            this.Controls.Add(this.label7);
             this.Controls.Add(this.listBoxKq);
             this.Controls.Add(this.grbChoi);
             this.Controls.Add(this.grbPhong);
@@ -411,6 +434,8 @@
         private System.Windows.Forms.ListBox listBoxKq;
         private System.Windows.Forms.Button btnSansang;
         private System.Windows.Forms.NumericUpDown numericUpDownSo;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label label8;
     }
 }
 

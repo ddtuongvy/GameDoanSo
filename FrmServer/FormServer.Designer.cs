@@ -111,7 +111,7 @@
             this.listBox.FormattingEnabled = true;
             this.listBox.ItemHeight = 25;
             this.listBox.Items.AddRange(new object[] {
-            "DANH SÁCH NGƯỜI CHƠI"});
+            "QUẢN LÝ TƯƠNG TÁC"});
             this.listBox.Location = new System.Drawing.Point(38, 161);
             this.listBox.Name = "listBox";
             this.listBox.Size = new System.Drawing.Size(683, 254);
