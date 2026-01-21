@@ -50,7 +50,7 @@ Có thể mở **nhiều Client** để chơi cùng lúc.
 - Thoát phòng
 - Ngắt kết nối Server
 
-## KIến trúc & giao thức truyền thông
+## Kiến trúc & giao thức truyền thông
 Ứng dụng được xây dựng theo **mô hình Client – Server**, sử dụng **TCP/IP Socket** để giao tiếp giữa các thành phần.
 
     Client (WinForms)
