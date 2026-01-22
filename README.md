@@ -26,7 +26,7 @@ Server bắt đầu lắng nghe kết nối từ Client qua TCP/IP.
 3. Nhấn **Run**
 4. Nhập thông tin kết nối:
 - **IP Server**: 127.0.0.1
-- **Port**: 8888
+- **Port**: 9000
 5. Nhấn **Kết nối**
 Có thể mở **nhiều Client** để chơi cùng lúc.
 
@@ -137,4 +137,4 @@ Game_Doan_so/
 
 ## Tác giả
 - Đào Đoàn Tường Vy - 052305007740
-- Trần Khánh Ngân - 05230500
+- Trần Khánh Ngân - 052305007635
