@@ -1,12 +1,12 @@
-﻿# DỰ ÁN:GAME ĐOÁN SỐ TCP/IP CLIENT SERVER (C#)
+﻿# 🎮DỰ ÁN:GAME ĐOÁN SỐ TCP/IP CLIENT SERVER (C#)🎮
 
-## Giới thiệu
+## 📍 Giới thiệu
 Đây là **ứng dụng game đoán số** được xây dựng theo **kiến trúc Client – Server** sử dụng **TCP/IP Socket** trong **C# WinForms** .
 Người chơi kết nối tới Server thông qua **IP & Port**, tham gia phòng chơi và thực hiện đoán số theo lượt.
 
 Dự án được thực hiện phục vụ **môn Lập trình mạng**.
 
-## Hướng dẫn cài đặt & chạy game
+## 📍 Hướng dẫn cài đặt & chạy game
 ### Bước 1: Tải project
 Clone từ GitHub:
 ```bash
@@ -30,7 +30,7 @@ Server bắt đầu lắng nghe kết nối từ Client qua TCP/IP.
 5. Nhấn **Kết nối**
 Có thể mở **nhiều Client** để chơi cùng lúc.
 
-## Chức năng chính
+## 📍 Chức năng chính
 ### Server
 - Lắng nghe kết nối từ nhiều Client qua TCP/IP
 - Quản lý danh sách người chơi
@@ -50,7 +50,7 @@ Có thể mở **nhiều Client** để chơi cùng lúc.
 - Thoát phòng
 - Ngắt kết nối Server
 
-## Kiến trúc & giao thức truyền thông
+## 📍 Kiến trúc & giao thức truyền thông
 Ứng dụng được xây dựng theo **mô hình Client – Server**, sử dụng **TCP/IP Socket** để giao tiếp giữa các thành phần.
 
     Client (WinForms)
@@ -83,7 +83,7 @@ Có thể mở **nhiều Client** để chơi cùng lúc.
 | RESTART_READY | - | Chuẩn bị cho ván chơi mới |
 | SERVER_STOPPED | Nội dung | Server dừng dịch vụ |
 
-## 📂 Cấu trúc thư mục
+## 📍 Cấu trúc thư mục
 
 ```
 Game_Doan_so/
@@ -111,7 +111,7 @@ Game_Doan_so/
 └── fix.txt                    # Ghi chú chỉnh sửa
 ```
 
-## Công nghệ sử dụng
+## 📍 Công nghệ sử dụng
 - Ngôn ngữ: **C#**
 - Framework: **.NET (WinForms)**
 - Mạng: **System.Net.Sockets**
@@ -120,7 +120,7 @@ Game_Doan_so/
 
 
 
-## Luồng chơi game
+## 📍 Luồng chơi game
 1. Client kết nối Server
 2. Nhập tên người chơi
 3. Tạo phòng hoặc vào phòng
@@ -130,11 +130,11 @@ Game_Doan_so/
 7. Server thông báo đúng / sai
 8. Kết thúc ván → Chơi lại hoặc thoát
 
-## Phạm vi & giới hạn
+## 📍 Phạm vi & giới hạn
 - Game hỗ trợ tối đa **2 người chơi / phòng**
 - Chưa hỗ trợ bảo mật dữ liệu
 - Phù hợp cho mục đích học tập và demo kiến trúc mạng
 
-## Tác giả
+## 📍 Tác giả
 - Đào Đoàn Tường Vy - 052305007740
 - Trần Khánh Ngân - 052305007635
