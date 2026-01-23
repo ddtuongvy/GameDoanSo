@@ -136,5 +136,7 @@ Game_Doan_so/
 - Phù hợp cho mục đích học tập và demo kiến trúc mạng
 
 ## 📍 Tác giả
+- Giảng viên hướng dẫn: TS. Lê Văn Quốc Anh
 - Đào Đoàn Tường Vy - 052305007740
 - Trần Khánh Ngân - 052305007635
+
