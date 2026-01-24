@@ -37,6 +37,7 @@ namespace FrmClient
             btnNgat.Enabled = false;
         }
 
+        //===== KẾT NỐI SERVER =====
         private void btnKetnoi_Click(object sender, EventArgs e)
         {
             try
@@ -44,7 +45,9 @@ namespace FrmClient
                 clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 clientSocket.Connect(txtIP.Text, (int)numPort.Value);
                 isConnected = true;
+                //Luồng nhận dữ liệu từ server
                 Task.Run(() => ReceiveFromServer());
+
                 btnKetnoi.Enabled = false;
                 btnTao.Enabled = true;
                 btnVao.Enabled = true;
@@ -99,7 +102,6 @@ namespace FrmClient
         private void btnSansang_Click(object sender, EventArgs e)
         {
             Send("READY");
-            // Disable Ready immediately to prevent multiple clicks while waiting/playing
             btnSansang.Enabled = false;
         }
         private void btnGui_Click(object sender, EventArgs e) 
@@ -112,6 +114,7 @@ namespace FrmClient
             Send("PLAY_AGAIN");
         }
 
+        //===== GỬI DỮ LIỆU ĐẾN SERVER =====
         private void Send(string msg)
         {
             try
@@ -126,19 +129,20 @@ namespace FrmClient
             }
         }
 
+        //===== NHẬN DỮ LIỆU TỪ SERVER =====
         private void ReceiveFromServer()
         {
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[1024]; //buffer nhận 1KB
             while (isConnected)
             {
                 try
                 {
-                    int size = clientSocket.Receive(buffer);
+                    int size = clientSocket.Receive(buffer); 
                     if (size == 0) break;
-
+                    //Chuyển byte -> chuỗi UTF8
                     string rawMsg = Encoding.UTF8.GetString(buffer, 0, size);
 
-                    // Tách các tin nhắn bị dính nhau bởi dấu \n
+                    // Tách các gói tin bằng \n
                     string[] messages = rawMsg.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
                     foreach (string msg in messages)
@@ -149,7 +153,8 @@ namespace FrmClient
                 catch { break; }
             }
         }
-
+        
+        //===== PHÂN TÍCH GÓI TIN =====
         private void ParseMessage(string msg)
         {
             string[] parts = msg.Split('|');
@@ -176,9 +181,9 @@ namespace FrmClient
 
                 case "WINNER":
                     MessageBox.Show(parts[1], "Kết thúc ván chơi");
-                    btnGui.Enabled = false;      // Khóa nút gửi số
-                    btnChoiLai.Enabled = true; //Hiện nút chơi lại
-                    btnSansang.Enabled = false;// Khóa nút sẵn sàng
+                    btnGui.Enabled = false;      
+                    btnChoiLai.Enabled = true; 
+                    btnSansang.Enabled = false;
                     break;
 
                 case "RESTART_READY":
