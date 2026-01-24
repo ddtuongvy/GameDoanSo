@@ -12,24 +12,26 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ProgressBar;
 
 namespace FrmServer
 {
     public partial class FormServer : Form
     {
-        //Dữ liệu cấu trúc hệ thống
-        private Socket serverSocket; 
-        private bool isServerRunning = false;
-        private readonly Random randomGenerator = new Random();
+        //===== KHAI BÁO BIẾN TOÀN CỤC =====
+        private Socket serverSocket; //Socket chính để listen client kết nối
+        private bool isServerRunning = false; // Cờ kiểm soát server đang chạy hay không
+        private readonly Random randomGenerator = new Random(); // Sinh số bí mật ngẫu nhiên cho mỗi phòng
 
-        //Khai báo các Dictionary quản lý trạng thái Client và Room (Chế độ Multiplayer)
-        private Dictionary<Socket, string> clientNames = new Dictionary<Socket, string>(); //Quản lý tên người chơi
-        private Dictionary<string, List<Socket>> gameRooms = new Dictionary<string, List<Socket>>(); //Quản lý phòng
-        private Dictionary<string, int> roomSecrets = new Dictionary<string, int>();
-        private Dictionary<Socket, string> clientRoomMapping = new Dictionary<Socket, string>(); //Quản lý người chơi trong phòng
-        private HashSet<Socket> readyClients = new HashSet<Socket>(); //Quản lý trạng thái sẵn sàng
-		private Dictionary<string, Socket> currentTurn = new Dictionary<string, Socket>();
-		public FormServer()
+        //===== CẤU TRÚC DỮ LIỆU QUẢN LÝ GAME =====
+        private Dictionary<Socket, string> clientNames = new Dictionary<Socket, string>(); //Quản lý lưu tên người chơi theo socket
+        private Dictionary<string, List<Socket>> gameRooms = new Dictionary<string, List<Socket>>(); //Quản lý phòng và các socket trong phòng
+        private Dictionary<string, int> roomSecrets = new Dictionary<string, int>(); //Lưu số bí mật mỗi phòng
+        private Dictionary<Socket, string> clientRoomMapping = new Dictionary<Socket, string>(); //Quản lý người chơi ở phòng nào
+        private HashSet<Socket> readyClients = new HashSet<Socket>(); //Lưu ds client đã sẵn sàng
+		private Dictionary<string, Socket> currentTurn = new Dictionary<string, Socket>(); //Quản lý lượt đoán chế độ 2 người
+		
+        public FormServer()
         {
             InitializeComponent();
 
@@ -37,7 +39,7 @@ namespace FrmServer
             btnStart.Enabled = true;
         }
 
-        //=== Quản lý dịch vụ Server ===
+        //===== KHỞI ĐỘNG SERVER =====
         private void btnStart_Click(object sender, EventArgs e)
         {
             try
@@ -45,11 +47,14 @@ namespace FrmServer
                 int port = (int)numServerPort.Value;
                 //Tạo socket
                 serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                serverSocket.Bind(new IPEndPoint(IPAddress.Any, port)); //Bind kết nối
-                serverSocket.Listen(10); //Listen
+                //Gắn kết socket đến port
+                serverSocket.Bind(new IPEndPoint(IPAddress.Any, port)); 
+                //Tạo hàng đợi
+                serverSocket.Listen(10); 
 
                 isServerRunning = true;
-                Task.Run(() => AcceptClients()); //Khởi chạy tiến trình AcceptClients() trong một luồng (Thread/Task) riêng biệt
+                //Chạy luồng (Thread/Task) phụ để chấp nhận client kết nối, tránh treo UI
+                Task.Run(() => AcceptClients()); 
 
                 UpdateServerLogs($"Server khởi động trên port {port}...");
                 btnStart.Enabled = false;
@@ -62,6 +67,7 @@ namespace FrmServer
             }
         }
         
+        //===== CHẤP NHẬN CLIENT =====
         private void AcceptClients()
         {
             while (isServerRunning)
@@ -71,52 +77,52 @@ namespace FrmServer
                     Socket clientSocket = serverSocket.Accept(); //Nhận kết nối từ CLient
                     UpdateServerLogs($"Client mới kết nối: {clientSocket.RemoteEndPoint}");
 
-                    // Kích hoạt luồng nhận dữ liệu cho Client này
+                    //Mỗi client có 1 luồng nhận dữ liệu riêng
                     Task.Run(() => ReceiveDataPayload(clientSocket));
                 }
                 catch { break; }
             }
         }
 
-        //=== Xử lý giao giức truyền tải Protocol ===
+        //===== NHẬN VÀ XỬ LÝ GIAO THỨC TRUYỂN TẢI PROTOCOL =====
         private void ReceiveDataPayload(Socket clientSocket)
         {
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[1024]; //buffer nhận 1KB
             while (clientSocket.Connected)
             {
                 try
                 {
+                    //Server nhận dữ liệu từ client
                     int size = clientSocket.Receive(buffer);
                     if (size == 0) break;
-
+                    //Chuyển byte -> chuỗi UTF8
                     string payload = Encoding.UTF8.GetString(buffer, 0, size).Trim();
-                    string[] parts = payload.Split('|');
+                    string[] parts = payload.Split('|'); //Protocol: COMMAND|DATA
 
                     switch (parts[0])
                     {
-                        case "LOGIN": // Format: LOGIN|TenNguoiChoi
+                        case "LOGIN":  //LOGIN|TenNguoiChoi
                             string playerName = parts.Length > 1 ? parts[1] : string.Empty;
                             clientNames[clientSocket] = playerName;
+
                             UpdateServerLogs($"{playerName} đã đăng nhập.");
-                            // Gửi xác nhận đăng nhập cho client
                             SendResponse(clientSocket, $"LOGIN_OK|{playerName}");
-                            // Gửi thông báo ngay cho chính client
                             SendResponse(clientSocket, $"INFO|Bạn đã đăng nhập thành công, chào {playerName}.");                   
                             break;
 
-                        case "CREATE_ROOM": // Format: CREATE_ROOM|MaPhong
+                        case "CREATE_ROOM": //CREATE_ROOM|MaPhong
                             ProcessRoomCreation(clientSocket, parts[1]); //Gọi phương thức xử lý tạo phòng
                             break;
 
-                        case "JOIN_ROOM": // Format: JOIN_ROOM|MaPhong
+                        case "JOIN_ROOM": //JOIN_ROOM|MaPhong
                             ProcessJoinRoom(clientSocket, parts[1]); //Gọi phương thức xử lý tham gia
                             break;
 
-                        case "READY": // Format: READY
+                        case "READY": //READY
                             ProcessReady(clientSocket); //Gọi phương thức xử lý sẵn sàng
                             break;
 
-                        case "GUESS": // Format: GUESS|SoDuDoan
+                        case "GUESS": //GUESS|SoDuDoan
                             ProcessGuessLogic(clientSocket, parts[1]); //Gọi phương thức xử lý đoán số
                             break;
 
@@ -133,13 +139,15 @@ namespace FrmServer
             }
             CleanupClient(clientSocket);
         }
+
+        //===== GỬI DỮ LIỆU CHO CLIENT =====
         private void SendResponse(Socket clientSocket, string message)
         {
             try
             {
-                //Chuyển đổi thông điệp sang định dạng Byte và truyền tải qua Socket.
                 if (clientSocket != null && clientSocket.Connected)
                 {
+                    //Mỗi message kết thúc bằng \n để client tách gói tin
                     byte[] data = Encoding.UTF8.GetBytes(message + "\n");
                     clientSocket.Send(data);
                 }
@@ -147,6 +155,7 @@ namespace FrmServer
             catch { }
         }
 
+        // Gửi thông báo cho tất cả client trong phòng
         private void BroadcastToRoom(string roomId, string message)
         {
             if (gameRooms.ContainsKey(roomId))
@@ -164,8 +173,8 @@ namespace FrmServer
             return clientNames.ContainsKey(client) && !string.IsNullOrWhiteSpace(clientNames[client]);
         }
 
-        //=== XỬ LÝ LOGIC NGHIỆP VỤ ===
-        //Xử lý logic Tạo phòng
+        //===== XỬ LÝ LOGIC NGHIỆP VỤ =====
+        //=== LOGIC TẠO PHÒNG ===
         private void ProcessRoomCreation(Socket client, string roomId)
         {
             if (!IsLoggedIn(client))
@@ -183,7 +192,6 @@ namespace FrmServer
                 // Gửi thông báo số lượng người chơi hiện tại (1/2)
                 string name = clientNames[client]; 
                 BroadcastToRoom(roomId, $"INFO|{name} đã tạo phòng. Hiện có 1/2 người chơi.");
-                //////////18.1.2026//////////
                 UpdateServerLogs($"Phòng {roomId} được tạo. Số bí mật: {roomSecrets[roomId]}");
             }
             else
@@ -192,7 +200,7 @@ namespace FrmServer
             }
         }
 
-        //Xử lý logic Tham gia vào phòng chơi
+        //=== LOGIC VÀO PHÒNG ===
         private void ProcessJoinRoom(Socket client, string roomId)
         {
             if (!IsLoggedIn(client))
@@ -213,7 +221,6 @@ namespace FrmServer
 				SendResponse(client, $"ROOM_OK|{roomId}");
 
                 string name = clientNames[client];
-
                 int current = gameRooms[roomId].Count;
                 // Thông báo cho cả phòng biết số lượng người (2/2)
                 BroadcastToRoom(roomId, $"INFO|{name} đã tham gia. Hiện có {current}/2 người chơi. Ấn Sẵn sàng để bắt đầu!");
@@ -225,7 +232,7 @@ namespace FrmServer
             }
         }
 
-        //Xử lý logic sẵn sàng 
+        //=== LOGIC SẴN SÀNG ===
         private void ProcessReady(Socket client)
         {
             if (!IsLoggedIn(client))
@@ -247,7 +254,6 @@ namespace FrmServer
             if (count == 1)
             {
                 SendResponse(client, "INFO|Chế độ chơi đơn: Bắt đầu đoán số!");
-                // Mở khóa nút gửi cho client
                 SendResponse(client, "INFO|Đến lượt của bạn");
             }
             // Chế độ 2 người
@@ -269,7 +275,7 @@ namespace FrmServer
             }
         }
 
-        //Xử lý logic dự đoán số
+        //=== LOGIC ĐOÁN SỐ ===
         private void ProcessGuessLogic(Socket client, string payload)
         {
             if (!clientRoomMapping.ContainsKey(client)) return;
@@ -310,35 +316,36 @@ namespace FrmServer
         // Hàm phụ để đổi lượt 
         private void SwitchTurn(string roomId, Socket currentClient)
         {
+            //Tìm vị trí (index) của người chơi hiện tại trong danh sách phòng
             int index = gameRooms[roomId].IndexOf(currentClient);
+            // Công thức vòng tròn: (vị trí hiện tại + 1) chia dư cho tổng số người
             int nextIndex = (index + 1) % gameRooms[roomId].Count;
             Socket nextPlayer = gameRooms[roomId][nextIndex];
 
-            currentTurn[roomId] = nextPlayer;
+            currentTurn[roomId] = nextPlayer; //Cập nhật lượt mới vào Dictionary
 
             SendResponse(currentClient, "INFO|Bạn đã đoán sai, chờ lượt tiếp theo.");
             SendResponse(nextPlayer, "INFO|Đến lượt của bạn đoán!");
         }
 
-        //Xử lý logic Chơi lại
+        //=== LOGIC CHƠI LẠI ===
         private void ProcessRestartGame(Socket client)
         {
             if (!clientRoomMapping.ContainsKey(client)) return;
             string roomId = clientRoomMapping[client];
-
             // Reset trạng thái
             foreach (var s in gameRooms[roomId])
                 readyClients.Remove(s);
 
-            currentTurn.Remove(roomId);
-            roomSecrets[roomId] = randomGenerator.Next(1, 101);
+            currentTurn.Remove(roomId); //Reset lượt đoán
+            roomSecrets[roomId] = randomGenerator.Next(1, 101); //Tạo số bí mật mới
 
             BroadcastToRoom(roomId, "INFO|Trận đấu mới đã bắt đầu! Hãy đoán số mới.");
             BroadcastToRoom(roomId, "RESTART_READY");
             UpdateServerLogs($"Phòng {roomId} bắt đầu ván mới. Số bí mật: {roomSecrets[roomId]}");
         }
 
-        //Xử lý logic Thoát phòng
+        //=== LOGIC THOÁT PHÒNG ===
         private void ProcessLeaveRoom(Socket client)
         {
             if (clientRoomMapping.ContainsKey(client))
@@ -365,8 +372,9 @@ namespace FrmServer
                         return;
                     }
 
-                    else
+                    else 
                     {
+                        //Nếu còn 1 người sẽ chuyển sang chơi 1 người
                         BroadcastToRoom(roomId, $"INFO|{name} đã thoát phòng.");
                         UpdateServerLogs($"{name} đã thoát phòng {roomId}.Còn lại {gameRooms[roomId].Count} người.");
 
@@ -395,7 +403,7 @@ namespace FrmServer
             client.Close();
         }
 
-        // Cập nhật ở log server 
+        //Cập nhật log server 
         private void UpdateServerLogs(string logMessage)
         {
             if (listBox.InvokeRequired)
@@ -418,7 +426,7 @@ namespace FrmServer
                             byte[] data = Encoding.UTF8.GetBytes("SERVER_STOPPED|Hệ thống: Server đã dừng dịch vụ.\n");
                             client.Send(data);
 
-                            // Đợi một chút xíu để tin nhắn kịp truyền đi
+                            // Đợi để tin nhắn kịp truyền đi
                             client.Shutdown(SocketShutdown.Both);
                             client.Close();
                         }
@@ -431,9 +439,9 @@ namespace FrmServer
                 clientRoomMapping.Clear();
                 readyClients.Clear();
 
-                if (serverSocket != null) //Đóng socket tổng
+                if (serverSocket != null) 
                 {
-                    serverSocket.Close();
+                    serverSocket.Close(); //Đóng socket tổng
                 }
                 UpdateServerLogs("Server đã dừng.");
                 btnStart.Enabled = true; 
