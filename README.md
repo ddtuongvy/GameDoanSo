@@ -107,8 +107,7 @@ Game_Doan_so/
 │
 ├── Game_Doan_so.sln            # File solution Visual Studio
 ├── .gitignore                 # Loại trừ file không cần push Git
-├── README.md                  # Mô tả dự án
-└── fix.txt                    # Ghi chú chỉnh sửa
+└── README.md                  # Mô tả dự án
 ```
 
 ## 📍 Công nghệ sử dụng
